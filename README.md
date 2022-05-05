@@ -1,4 +1,3 @@
 # Employee Management API
 
-- Golang has been used
-- MongoDB has been used for database
+- Golang (Gin Web Framework) has been used
