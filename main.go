@@ -10,10 +10,21 @@ import (
 	"time"
 
 	"github.com/arnab333/golang-employee-management/routes"
+	"github.com/arnab333/golang-employee-management/services"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
 	router := routes.Init()
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	f := services.GetMongoConnection()
+
+	defer f()
 
 	srv := &http.Server{
 		Addr:    ":5000",
