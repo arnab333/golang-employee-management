@@ -6,5 +6,5 @@ import (
 )
 
 func roleRoutes(rg *gin.RouterGroup) {
-	rg.POST("/role", controllers.CreateRole)
+	rg.GET("/roles", controllers.GetRoles)
 }

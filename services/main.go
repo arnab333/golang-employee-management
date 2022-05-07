@@ -15,17 +15,18 @@ import (
 
 type mongoCollections struct {
 	userRole string
+	user     string
 }
 
 var collectionNames = mongoCollections{
-	userRole: "role",
+	userRole: "roles",
+	user:     "users",
 }
 
 var mongoOnce sync.Once
 
 type MongoDBConnection struct {
 	Database *mongo.Database
-	Context  context.Context
 }
 
 var DBConn MongoDBConnection
@@ -64,7 +65,6 @@ func GetMongoConnection() func() {
 		// }()
 
 		DBConn.Database = client.Database(dbname)
-		DBConn.Context = ctx
 
 		// ## The following part is only for checking if the database connection is successfull or not.
 		err = client.Ping(ctx, readpref.Primary())
