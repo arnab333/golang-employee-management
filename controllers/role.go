@@ -1,21 +1,40 @@
 package controllers
 
 import (
+	"fmt"
+	"net/http"
+
+	"github.com/arnab333/golang-employee-management/helpers"
 	"github.com/arnab333/golang-employee-management/services"
 	"github.com/gin-gonic/gin"
 )
 
-func CreateRole(ctx *gin.Context) {
-	roleData := []services.UserRole{
-		{
-			Value: 1,
-			Text:  "admin",
-		},
+// func CreateRole(c *gin.Context) {
+// 	var roleData []services.UserRole
+// 	if err := c.ShouldBindJSON(&roleData); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	fmt.Println("roleData===>", roleData)
+// 	data := make([]interface{}, len(roleData))
+// 	for i, v := range roleData {
+// 		data[i] = v
+// 	}
+// 	services.DBConn.InsertUserRole(data)
+// }
+
+func CreateRole(c *gin.Context) {
+	var roleData services.UserRole
+	if err := c.ShouldBindJSON(&roleData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	data := make([]interface{}, len(roleData))
-	for i, v := range roleData {
-		data[i] = v
+	if _, err := services.DBConn.InsertUserRole(roleData); err != nil {
+		fmt.Println("err ==>", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
-	services.DBConn.InsertUserRole(data)
+
+	c.JSON(http.StatusCreated, gin.H{"message": helpers.CreatedMessage})
 }
