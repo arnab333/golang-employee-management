@@ -22,9 +22,9 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	f := services.GetMongoConnection()
+	closeConn := services.GetMongoConnection()
 
-	defer f()
+	defer closeConn()
 
 	srv := &http.Server{
 		Addr:    ":5000",
