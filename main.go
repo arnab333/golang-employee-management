@@ -22,7 +22,9 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	closeConn := services.GetMongoConnection()
+	closeConn := services.InitMongoConnection()
+
+	services.InitRedisConnection()
 
 	defer closeConn()
 

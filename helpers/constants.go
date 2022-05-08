@@ -4,14 +4,12 @@ const (
 	CreatedMessage = "Successfully Inserted!"
 )
 
-type userRoles struct {
-	Superadmin string `json:"superadmin"`
-	Admin      string `json:"admin"`
-	User       string `json:"user"`
+type ContextValues struct {
+	UserID     string
+	AccessUUID string
 }
 
-var UserRoles userRoles = userRoles{
-	Superadmin: "superadmin",
-	Admin:      "admin",
-	User:       "user",
+var CtxValues = ContextValues{
+	UserID:     "userID",
+	AccessUUID: "accessUUID",
 }

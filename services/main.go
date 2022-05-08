@@ -8,22 +8,25 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type mongoCollections struct {
-	userRole string
-	user     string
+	roles string
+	user  string
 }
 
 var collectionNames = mongoCollections{
-	userRole: "roles",
-	user:     "users",
+	roles: "roles",
+	user:  "users",
 }
 
 var mongoOnce sync.Once
+
+var redisOnce sync.Once
 
 type MongoDBConnection struct {
 	Database *mongo.Database
@@ -31,7 +34,14 @@ type MongoDBConnection struct {
 
 var DBConn MongoDBConnection
 
-func GetMongoConnection() func() {
+type redisConnection struct {
+	redisClient *redis.Client
+	ctx         context.Context
+}
+
+var redisConn redisConnection
+
+func InitMongoConnection() func() {
 	var client *mongo.Client
 	var cancel context.CancelFunc
 	var ctx context.Context
@@ -90,4 +100,22 @@ func CloseMongoConnection(client *mongo.Client, ctx context.Context, cancel cont
 	}()
 
 	defer cancel()
+}
+
+func InitRedisConnection() {
+	redisOnce.Do(func() {
+		redisConn.ctx = context.Background()
+		dsn := os.Getenv("REDIS_DSN")
+
+		redisConn.redisClient = redis.NewClient(&redis.Options{
+			Addr:     dsn,                         //redis port
+			Password: os.Getenv("REDIS_PASSWORD"), // no password set
+			DB:       0,                           // use default DB
+		})
+		result, err := redisConn.redisClient.Ping(redisConn.ctx).Result()
+		if err != nil {
+			panic(err)
+		}
+		log.Println("redis ==>", result)
+	})
 }

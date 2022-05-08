@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/arnab333/golang-employee-management/middlewares"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -21,9 +22,13 @@ func Init() *gin.Engine {
 	api := router.Group("/api")
 	v1 := api.Group("/v1")
 
-	authRoutes(v1)
-	userRoutes(v1)
-	roleRoutes(v1)
+	auth := v1.Group("/")
+	user := v1.Group("/")
+	role := v1.Group("/", middlewares.VerifyToken)
+
+	authRoutes(auth)
+	userRoutes(user)
+	roleRoutes(role)
 
 	return router
 }

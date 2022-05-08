@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/arnab333/golang-employee-management/helpers"
@@ -21,7 +22,9 @@ func Register(c *gin.Context) {
 
 	json.IsActive = true
 
-	if json.Role != helpers.UserRoles.Admin && json.Role != helpers.UserRoles.Superadmin && json.Role != helpers.UserRoles.User {
+	_, err := services.DBConn.FindRole(c, bson.M{"name": json.Role})
+
+	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse("Role Does Not Match!"))
 		return
 	}
@@ -51,13 +54,70 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	mailResponse, err := services.SendEmail(&services.EmailDetails{
+		Name:    "Test",
+		Address: "arnabkdebnath@gmail.com",
+	})
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		fmt.Println("StatusCode ==>", mailResponse.StatusCode)
+	}
+
 	c.JSON(http.StatusCreated, helpers.HandleSuccessResponse(helpers.CreatedMessage, nil))
 }
 
 func Login(c *gin.Context) {
+	var json map[string]string
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		return
+	}
+
+	user, err := services.DBConn.FindUser(c, bson.M{"email": json["email"], "isActive": true})
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, helpers.HandleErrorResponse("Invalid Email or Password!!"))
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(json["password"])); err != nil {
+		c.JSON(http.StatusNotFound, helpers.HandleErrorResponse("Invalid Email or Password!"))
+		return
+	}
+
+	td, err := services.CreateToken(user.ID.Hex())
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+
+	err = services.CreateAuth(user.ID.Hex(), td)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
+	}
+
+	tokens := gin.H{
+		"access_token":  td.AccessToken,
+		"refresh_token": td.RefreshToken,
+	}
+	c.JSON(http.StatusCreated, helpers.HandleSuccessResponse("", tokens))
 
 }
 
 func Logout(c *gin.Context) {
+	accessUUID := c.GetString(helpers.CtxValues.AccessUUID)
+	if accessUUID == "" {
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Unauthorized!"))
+		return
+	}
 
+	deleted, err := services.DeleteAuth(accessUUID)
+	if err != nil || deleted == 0 {
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Unauthorized!!"))
+		return
+	}
+	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("Successfully logged out", nil))
 }
