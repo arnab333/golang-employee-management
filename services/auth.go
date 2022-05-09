@@ -24,10 +24,10 @@ type TokenDetails struct {
 func createToken(userID string) (*TokenDetails, error) {
 	td := TokenDetails{
 		AtExpires:  time.Now().Add(time.Minute * 15),
-		AccessUUID: "access-" + helpers.GetUUID(),
+		AccessUUID: "ACCESS-" + helpers.GetUUID(),
 		// RtExpires:   time.Now().Add(time.Hour * 24 * 7), // production
 		RtExpires:   time.Now().Add(time.Hour * 8),
-		RefreshUuid: "refresh-" + helpers.GetUUID(),
+		RefreshUuid: "REFRESH-" + helpers.GetUUID(),
 	}
 
 	var err error
