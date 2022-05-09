@@ -17,16 +17,13 @@ func VerifyToken(c *gin.Context) {
 		return
 	}
 
-	// services.AuthDetails.UserID = claims["iss"].(string)
-
-	accessUUID, ok := claims["jti"].(string)
-	if !ok {
+	if claims.ID == "" {
 		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Invalid Token!!"))
 		c.Abort()
 		return
 	}
 
-	userID, err := services.FetchAuth(accessUUID)
+	userID, err := services.FetchAuth(c, claims.ID)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Invalid Token!!!"))
 		c.Abort()
@@ -34,6 +31,6 @@ func VerifyToken(c *gin.Context) {
 	}
 
 	c.Set(helpers.CtxValues.UserID, userID)
-	c.Set(helpers.CtxValues.AccessUUID, accessUUID)
+	c.Set(helpers.CtxValues.AccessUUID, claims.ID)
 	c.Next()
 }

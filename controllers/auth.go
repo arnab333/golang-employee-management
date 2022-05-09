@@ -88,23 +88,16 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	td, err := services.CreateToken(user.ID.Hex())
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
-		return
-	}
-
-	err = services.CreateAuth(user.ID.Hex(), td)
+	td, err := services.CreateAuth(c, user.ID.Hex())
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err.Error())
 	}
 
 	tokens := gin.H{
-		"access_token":  td.AccessToken,
-		"refresh_token": td.RefreshToken,
+		"accessToken":  td.AccessToken,
+		"refreshToken": td.RefreshToken,
 	}
 	c.JSON(http.StatusCreated, helpers.HandleSuccessResponse("", tokens))
-
 }
 
 func Logout(c *gin.Context) {
@@ -114,7 +107,7 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	deleted, err := services.DeleteAuth(accessUUID)
+	deleted, err := services.DeleteAuth(c, accessUUID)
 	if err != nil || deleted == 0 {
 		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Unauthorized!!"))
 		return

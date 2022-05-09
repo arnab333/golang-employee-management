@@ -36,7 +36,6 @@ var DBConn MongoDBConnection
 
 type redisConnection struct {
 	redisClient *redis.Client
-	ctx         context.Context
 }
 
 var redisConn redisConnection
@@ -86,11 +85,11 @@ func InitMongoConnection() func() {
 	})
 
 	return func() {
-		CloseMongoConnection(client, ctx, cancel)
+		closeMongoConnection(client, ctx, cancel)
 	}
 }
 
-func CloseMongoConnection(client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
+func closeMongoConnection(client *mongo.Client, ctx context.Context, cancel context.CancelFunc) {
 	defer func() {
 		// client.Disconnect method also has deadline.
 		// returns error if any,
@@ -102,9 +101,8 @@ func CloseMongoConnection(client *mongo.Client, ctx context.Context, cancel cont
 	defer cancel()
 }
 
-func InitRedisConnection() {
+func InitRedisConnection() func() {
 	redisOnce.Do(func() {
-		redisConn.ctx = context.Background()
 		dsn := os.Getenv("REDIS_DSN")
 
 		redisConn.redisClient = redis.NewClient(&redis.Options{
@@ -112,10 +110,22 @@ func InitRedisConnection() {
 			Password: os.Getenv("REDIS_PASSWORD"), // no password set
 			DB:       0,                           // use default DB
 		})
-		result, err := redisConn.redisClient.Ping(redisConn.ctx).Result()
+		result, err := redisConn.redisClient.Ping(context.Background()).Result()
 		if err != nil {
 			panic(err)
 		}
 		log.Println("redis ==>", result)
 	})
+
+	return func() {
+		closeRedisConnection(redisConn.redisClient)
+	}
+}
+
+func closeRedisConnection(client *redis.Client) {
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Fatal("Close Error ==>", err)
+		}
+	}()
 }

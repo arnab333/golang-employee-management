@@ -22,11 +22,13 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	closeConn := services.InitMongoConnection()
+	closeMongoConn := services.InitMongoConnection()
 
-	services.InitRedisConnection()
+	closeRedisConn := services.InitRedisConnection()
 
-	defer closeConn()
+	defer closeMongoConn()
+
+	defer closeRedisConn()
 
 	srv := &http.Server{
 		Addr:    ":5000",
