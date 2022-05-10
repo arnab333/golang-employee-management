@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arnab333/golang-employee-management/helpers"
 	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -46,15 +47,15 @@ func InitMongoConnection() func() {
 	var ctx context.Context
 
 	mongoOnce.Do(func() {
-		username := os.Getenv("MONGO_USERNAME")
-		pass := os.Getenv("MONGO_PASSWORD")
-		dbname := os.Getenv("MONGO_DBNAME")
+		username := os.Getenv(helpers.EnvKeys.MONGO_USERNAME)
+		pass := os.Getenv(helpers.EnvKeys.MONGO_PASSWORD)
+		dbname := os.Getenv(helpers.EnvKeys.MONGO_DBNAME)
 
 		if username == "" || pass == "" || dbname == "" {
 			log.Fatal("You must set your 'MONGO_USERNAME' environmental variable.")
 		}
 
-		client, err := mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@cluster0.6x1pj.mongodb.net/%s?retryWrites=true&w=majority", os.Getenv("MONGO_USERNAME"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGO_DBNAME"))))
+		client, err := mongo.NewClient(options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@cluster0.6x1pj.mongodb.net/%s?retryWrites=true&w=majority", username, pass, dbname)))
 		if err != nil {
 			log.Fatal("NewClient Error ==>", err)
 		}
@@ -103,12 +104,12 @@ func closeMongoConnection(client *mongo.Client, ctx context.Context, cancel cont
 
 func InitRedisConnection() func() {
 	redisOnce.Do(func() {
-		dsn := os.Getenv("REDIS_DSN")
+		dsn := os.Getenv(helpers.EnvKeys.REDIS_DSN)
 
 		redisConn.redisClient = redis.NewClient(&redis.Options{
-			Addr:     dsn,                         //redis port
-			Password: os.Getenv("REDIS_PASSWORD"), // no password set
-			DB:       0,                           // use default DB
+			Addr:     dsn,                                       //redis port
+			Password: os.Getenv(helpers.EnvKeys.REDIS_PASSWORD), // no password set
+			DB:       0,                                         // use default DB
 		})
 		result, err := redisConn.redisClient.Ping(context.Background()).Result()
 		if err != nil {

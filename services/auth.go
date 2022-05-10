@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/arnab333/golang-employee-management/helpers"
@@ -22,7 +21,8 @@ type TokenDetails struct {
 }
 
 type TokenClaims struct {
-	Role string
+	Role   string
+	UserID string
 	jwt.RegisteredClaims
 }
 
@@ -38,34 +38,53 @@ func createToken(userID string, role string) (*TokenDetails, error) {
 	var err error
 
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, TokenClaims{
-		Role: role,
+		Role:   role,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        td.AccessUUID,
-			Issuer:    userID,
 			ExpiresAt: jwt.NewNumericDate(td.AtExpires),
 		},
 	})
 
-	td.AccessToken, err = at.SignedString([]byte(os.Getenv("JWT_ACCESS_SECRET")))
+	td.AccessToken, err = at.SignedString([]byte(os.Getenv(helpers.EnvKeys.JWT_ACCESS_SECRET)))
 	if err != nil {
 		return nil, err
 	}
 
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, TokenClaims{
-		Role: role,
+		Role:   role,
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        td.RefreshUuid,
-			Issuer:    userID,
 			ExpiresAt: jwt.NewNumericDate(td.RtExpires),
 		},
 	})
 
-	td.RefreshToken, err = rt.SignedString([]byte(os.Getenv("JWT_REFRESH_SECRET")))
+	td.RefreshToken, err = rt.SignedString([]byte(os.Getenv(helpers.EnvKeys.JWT_REFRESH_SECRET)))
 	if err != nil {
 		return nil, err
 	}
 
 	return &td, nil
+}
+
+func ExtractFromToken(tokenString string, envKey string) (*TokenClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv(envKey)), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(*TokenClaims)
+	if !ok && !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+	return claims, nil
 }
 
 func CreateAuth(ctx context.Context, userID string, role string) (*TokenDetails, error) {
@@ -104,29 +123,4 @@ func DeleteAuth(ctx context.Context, key string) (int64, error) {
 		return 0, err
 	}
 	return deleted, nil
-}
-
-func ExtractFromToken(bearToken string) (*TokenClaims, error) {
-	strArr := strings.Split(bearToken, " ")
-	var tokenString string
-	if len(strArr) == 2 {
-		tokenString = strArr[1]
-	}
-
-	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(os.Getenv("JWT_ACCESS_SECRET")), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(*TokenClaims)
-	if !ok && !token.Valid {
-		return nil, errors.New("invalid token")
-	}
-	return claims, nil
 }

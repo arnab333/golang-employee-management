@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/arnab333/golang-employee-management/helpers"
 	"github.com/arnab333/golang-employee-management/services"
@@ -91,6 +92,7 @@ func Login(c *gin.Context) {
 	td, err := services.CreateAuth(c, user.ID.Hex(), user.Role)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return
 	}
 
 	tokens := gin.H{
@@ -113,4 +115,44 @@ func Logout(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("Successfully logged out", nil))
+}
+
+func RefreshToken(c *gin.Context) {
+	var json map[string]string
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(err.Error()))
+		return
+	}
+
+	tokenString := json["refreshToken"]
+
+	claims, err := services.ExtractFromToken(tokenString, helpers.EnvKeys.JWT_REFRESH_SECRET)
+	if err != nil {
+		msg := "Invalid Token!"
+		if strings.Contains(err.Error(), "expired") {
+			msg = "Token Expired!"
+		}
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse(msg))
+		c.Abort()
+		return
+	}
+
+	deleted, err := services.DeleteAuth(c, claims.ID)
+	if err != nil || deleted == 0 {
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Unauthorized!!"))
+		return
+	}
+
+	td, err := services.CreateAuth(c, claims.UserID, claims.Role)
+	if err != nil {
+		c.JSON(http.StatusForbidden, err.Error())
+		return
+	}
+
+	tokens := gin.H{
+		"accessToken":  td.AccessToken,
+		"refreshToken": td.RefreshToken,
+	}
+	c.JSON(http.StatusCreated, helpers.HandleSuccessResponse("", tokens))
 }

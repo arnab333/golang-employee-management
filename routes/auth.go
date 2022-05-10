@@ -12,4 +12,6 @@ func authRoutes(rg *gin.RouterGroup) {
 	rg.POST("/login", controllers.Login)
 
 	rg.POST("/logout", middlewares.VerifyToken, controllers.Logout)
+
+	rg.POST("/refresh-token", middlewares.VerifyToken, controllers.RefreshToken)
 }

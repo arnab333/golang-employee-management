@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/arnab333/golang-employee-management/helpers"
 	"github.com/arnab333/golang-employee-management/services"
@@ -10,9 +11,19 @@ import (
 
 func VerifyToken(c *gin.Context) {
 	bearToken := c.Request.Header.Get("Authorization")
-	claims, err := services.ExtractFromToken(bearToken)
+	strArr := strings.Split(bearToken, " ")
+	var tokenString string
+	if len(strArr) == 2 {
+		tokenString = strArr[1]
+	}
+
+	claims, err := services.ExtractFromToken(tokenString, helpers.EnvKeys.JWT_ACCESS_SECRET)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Invalid Token!"))
+		msg := "Invalid Token!"
+		if strings.Contains(err.Error(), "expired") {
+			msg = "Token Expired!"
+		}
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse(msg))
 		c.Abort()
 		return
 	}
