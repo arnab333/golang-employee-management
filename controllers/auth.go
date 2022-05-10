@@ -88,7 +88,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	td, err := services.CreateAuth(c, user.ID.Hex())
+	td, err := services.CreateAuth(c, user.ID.Hex(), user.Role)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err.Error())
 	}

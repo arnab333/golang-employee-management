@@ -32,5 +32,6 @@ func VerifyToken(c *gin.Context) {
 
 	c.Set(helpers.CtxValues.UserID, userID)
 	c.Set(helpers.CtxValues.AccessUUID, claims.ID)
+	c.Set(helpers.CtxValues.Role, claims.Role)
 	c.Next()
 }

@@ -21,7 +21,12 @@ type TokenDetails struct {
 	RtExpires    time.Time
 }
 
-func createToken(userID string) (*TokenDetails, error) {
+type TokenClaims struct {
+	Role string
+	jwt.RegisteredClaims
+}
+
+func createToken(userID string, role string) (*TokenDetails, error) {
 	td := TokenDetails{
 		AtExpires:  time.Now().Add(time.Minute * 15),
 		AccessUUID: "ACCESS-" + helpers.GetUUID(),
@@ -32,10 +37,13 @@ func createToken(userID string) (*TokenDetails, error) {
 
 	var err error
 
-	at := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		ID:        td.AccessUUID,
-		Issuer:    userID,
-		ExpiresAt: jwt.NewNumericDate(td.AtExpires),
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, TokenClaims{
+		Role: role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        td.AccessUUID,
+			Issuer:    userID,
+			ExpiresAt: jwt.NewNumericDate(td.AtExpires),
+		},
 	})
 
 	td.AccessToken, err = at.SignedString([]byte(os.Getenv("JWT_ACCESS_SECRET")))
@@ -43,10 +51,13 @@ func createToken(userID string) (*TokenDetails, error) {
 		return nil, err
 	}
 
-	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		ID:        td.RefreshUuid,
-		Issuer:    userID,
-		ExpiresAt: jwt.NewNumericDate(td.RtExpires),
+	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, TokenClaims{
+		Role: role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        td.RefreshUuid,
+			Issuer:    userID,
+			ExpiresAt: jwt.NewNumericDate(td.RtExpires),
+		},
 	})
 
 	td.RefreshToken, err = rt.SignedString([]byte(os.Getenv("JWT_REFRESH_SECRET")))
@@ -57,8 +68,8 @@ func createToken(userID string) (*TokenDetails, error) {
 	return &td, nil
 }
 
-func CreateAuth(ctx context.Context, userID string) (*TokenDetails, error) {
-	td, err := createToken(userID)
+func CreateAuth(ctx context.Context, userID string, role string) (*TokenDetails, error) {
+	td, err := createToken(userID, role)
 	if err != nil {
 		return nil, err
 	}
@@ -95,14 +106,14 @@ func DeleteAuth(ctx context.Context, key string) (int64, error) {
 	return deleted, nil
 }
 
-func ExtractFromToken(bearToken string) (*jwt.RegisteredClaims, error) {
+func ExtractFromToken(bearToken string) (*TokenClaims, error) {
 	strArr := strings.Split(bearToken, " ")
 	var tokenString string
 	if len(strArr) == 2 {
 		tokenString = strArr[1]
 	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -113,7 +124,7 @@ func ExtractFromToken(bearToken string) (*jwt.RegisteredClaims, error) {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(*jwt.RegisteredClaims)
+	claims, ok := token.Claims.(*TokenClaims)
 	if !ok && !token.Valid {
 		return nil, errors.New("invalid token")
 	}
