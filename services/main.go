@@ -16,13 +16,15 @@ import (
 )
 
 type mongoCollections struct {
-	roles string
-	user  string
+	roles    string
+	users    string
+	holidays string
 }
 
 var collectionNames = mongoCollections{
-	roles: "roles",
-	user:  "users",
+	roles:    "roles",
+	users:    "users",
+	holidays: "holidays",
 }
 
 var mongoOnce sync.Once

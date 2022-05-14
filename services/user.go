@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -16,15 +17,19 @@ type User struct {
 }
 
 func (conn *MongoDBConnection) InsertUser(c *gin.Context, data interface{}) (*mongo.InsertOneResult, error) {
-	collection := conn.Database.Collection(collectionNames.user)
+	collection := conn.Database.Collection(collectionNames.users)
 
 	return collection.InsertOne(c, data)
 }
 
 func (conn *MongoDBConnection) FindUser(c *gin.Context, filters interface{}) (User, error) {
-	collection := conn.Database.Collection(collectionNames.user)
+	collection := conn.Database.Collection(collectionNames.users)
 
 	var data User
+
+	if filters == nil {
+		filters = bson.M{}
+	}
 
 	err := collection.FindOne(c, filters).Decode(&data)
 

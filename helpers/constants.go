@@ -17,6 +17,8 @@ type EnviormentVariables struct {
 	REDIS_DSN          string
 	REDIS_PASSWORD     string
 	APP_ENV            string
+	GOOGLE_API_KEY     string
+	GOOGLE_CALENDAR_ID string
 }
 
 type RolesList struct {
@@ -53,6 +55,8 @@ var EnvKeys = EnviormentVariables{
 	REDIS_DSN:          "REDIS_DSN",
 	REDIS_PASSWORD:     "REDIS_PASSWORD",
 	APP_ENV:            "APP_ENV",
+	GOOGLE_API_KEY:     "GOOGLE_API_KEY",
+	GOOGLE_CALENDAR_ID: "GOOGLE_CALENDAR_ID",
 }
 
 var UserRoles = RolesList{

@@ -19,6 +19,10 @@ func (conn *MongoDBConnection) FindRole(c *gin.Context, filters interface{}) (Us
 
 	var data UserRole
 
+	if filters == nil {
+		filters = bson.M{}
+	}
+
 	err := collection.FindOne(c, filters).Decode(&data)
 
 	return data, err
@@ -51,6 +55,10 @@ func (conn *MongoDBConnection) UpdateRole(c *gin.Context, filters interface{}, d
 	collection := conn.Database.Collection(collectionNames.roles)
 
 	opts := options.Update().SetUpsert(true)
+
+	if filters == nil {
+		filters = bson.M{}
+	}
 
 	return collection.UpdateOne(c, filters, data, opts)
 }
