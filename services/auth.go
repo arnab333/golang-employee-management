@@ -27,11 +27,18 @@ type TokenClaims struct {
 }
 
 func createToken(userID string, role string) (*TokenDetails, error) {
+	rtExpires := time.Now().Add(time.Hour * 24 * 7)
+	atExpires := time.Now().Add(time.Hour * 24 * 7)
+
+	if os.Getenv(helpers.EnvKeys.APP_ENV) == "prod" {
+		atExpires = time.Now().Add(time.Minute * 15)
+		rtExpires = time.Now().Add(time.Hour * 24 * 7)
+	}
+
 	td := TokenDetails{
-		AtExpires:  time.Now().Add(time.Minute * 15),
-		AccessUUID: "ACCESS-" + helpers.GetUUID(),
-		// RtExpires:   time.Now().Add(time.Hour * 24 * 7), // production
-		RtExpires:   time.Now().Add(time.Hour * 8),
+		AtExpires:   atExpires,
+		AccessUUID:  "ACCESS-" + helpers.GetUUID(),
+		RtExpires:   rtExpires,
 		RefreshUuid: "REFRESH-" + helpers.GetUUID(),
 	}
 

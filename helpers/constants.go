@@ -1,13 +1,10 @@
 package helpers
 
-const (
-	CreatedMessage = "Successfully Inserted!"
-)
-
 type ContextValues struct {
-	UserID     string
-	AccessUUID string
-	Role       string
+	UserID      string
+	AccessUUID  string
+	Role        string
+	Permissions string
 }
 
 type EnviormentVariables struct {
@@ -19,12 +16,31 @@ type EnviormentVariables struct {
 	JWT_REFRESH_SECRET string
 	REDIS_DSN          string
 	REDIS_PASSWORD     string
+	APP_ENV            string
+}
+
+type RolesList struct {
+	SuperAdmin        string
+	Admin             string
+	Accountant        string
+	AccountantManager string
+	Manager           string
+	HR                string
+	HRManager         string
+}
+
+type PermissionsList struct {
+	CreateRole string
+	ReadRole   string
+	UpdateRole string
+	DeleteRole string
 }
 
 var CtxValues = ContextValues{
-	UserID:     "userID",
-	AccessUUID: "accessUUID",
-	Role:       "role",
+	UserID:      "userID",
+	AccessUUID:  "accessUUID",
+	Role:        "role",
+	Permissions: "permissions",
 }
 
 var EnvKeys = EnviormentVariables{
@@ -36,4 +52,27 @@ var EnvKeys = EnviormentVariables{
 	JWT_REFRESH_SECRET: "JWT_REFRESH_SECRET",
 	REDIS_DSN:          "REDIS_DSN",
 	REDIS_PASSWORD:     "REDIS_PASSWORD",
+	APP_ENV:            "APP_ENV",
 }
+
+var UserRoles = RolesList{
+	SuperAdmin:        "superAdmin",
+	Admin:             "admin",
+	Accountant:        "accountant",
+	AccountantManager: "accountantManager",
+	Manager:           "manager",
+	HR:                "hr",
+	HRManager:         "hrManager",
+}
+
+var UserPermissions = PermissionsList{
+	CreateRole: "CreateRole",
+	ReadRole:   "ReadRole",
+	UpdateRole: "UpdateRole",
+	DeleteRole: "DeleteRole",
+}
+
+const (
+	CreatedMessage = "Successfully Inserted!"
+	Unauthorized   = "You are not authorized!"
+)

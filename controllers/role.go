@@ -10,6 +10,15 @@ import (
 )
 
 func GetUserRoles(c *gin.Context) {
+	permissions := c.GetStringSlice(helpers.CtxValues.Permissions)
+
+	isValid := helpers.SliceStringContains(permissions, helpers.UserPermissions.ReadRole)
+
+	if !isValid {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(helpers.Unauthorized))
+		return
+	}
+
 	result, err := services.DBConn.FindRoles(c, nil)
 
 	if err != nil {
@@ -28,14 +37,15 @@ func UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	filter := bson.D{{Key: "name", Value: json.Name}}
+	filters := bson.D{{Key: "name", Value: json.Name}}
 	update := bson.D{
 		{Key: "$set", Value: bson.D{
 			{Key: "name", Value: json.Name},
+			{Key: "permissions", Value: json.Permissions},
 		}},
 	}
 
-	result, err := services.DBConn.UpdateRole(c, filter, update)
+	result, err := services.DBConn.UpdateRole(c, filters, update)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))

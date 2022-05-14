@@ -23,7 +23,7 @@ func Register(c *gin.Context) {
 
 	json.IsActive = true
 
-	_, err := services.DBConn.FindRole(c, bson.M{"name": json.Role})
+	role, err := services.DBConn.FindRole(c, bson.M{"name": json.Role})
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse("Role Does Not Match!"))
@@ -43,11 +43,12 @@ func Register(c *gin.Context) {
 
 	password, err := bcrypt.GenerateFromPassword([]byte(json.Password), 14)
 
-	json.Password = string(password)
-
 	if err != nil {
 		fmt.Println("FindUser err ==>", err.Error())
 	}
+
+	json.Password = string(password)
+	json.Role = role.ID.Hex()
 
 	if _, err := services.DBConn.InsertUser(c, json); err != nil {
 		fmt.Println("InsertUser err ==>", err)
