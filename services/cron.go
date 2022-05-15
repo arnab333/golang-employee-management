@@ -44,12 +44,13 @@ func everySixMonths() {
 		filters := bson.M{
 			"date": val.Date,
 		}
-		_, err := DBConn.findHoliday(context.TODO(), filters)
+		_, err := DBConn.FindHoliday(context.TODO(), filters)
 		if err != nil {
 			// fmt.Println("Error findHoliday ==>", err.Error())
-			val.Summary = strings.ReplaceAll(val.Summary, " (Regional Holiday)", "")
+			val.Summary = strings.ReplaceAll(val.Summary, "(Regional Holiday)", "")
 			val.Summary = strings.ReplaceAll(val.Summary, "West Bengal:", "")
-			_, err = DBConn.insertHoliday(context.TODO(), val)
+			val.Summary = strings.TrimSpace(val.Summary)
+			_, err = DBConn.InsertHoliday(context.TODO(), val)
 			if err != nil {
 				fmt.Println("Error insertHoliday ==>", err.Error())
 			}

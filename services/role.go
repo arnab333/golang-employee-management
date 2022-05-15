@@ -9,8 +9,8 @@ import (
 )
 
 type UserRole struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty"`
-	Name        string             `bson:"name" json:"name" binding:"required"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name        string             `bson:"name" json:"name"`
 	Permissions []string           `bson:"permissions" json:"permissions"`
 }
 

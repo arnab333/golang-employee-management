@@ -8,4 +8,6 @@ import (
 func holidayRoutes(rg *gin.RouterGroup) {
 	rg.GET("/holidays", controllers.GetHolidays)
 
+	rg.GET("/holiday/:id", controllers.GetHoliday)
+
 }

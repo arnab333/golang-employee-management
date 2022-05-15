@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/arnab333/golang-employee-management/helpers"
 	"github.com/arnab333/golang-employee-management/services"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetUserRoles(c *gin.Context) {
@@ -29,31 +31,31 @@ func GetUserRoles(c *gin.Context) {
 
 func UpdateUserRole(c *gin.Context) {
 	var json services.UserRole
-
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
 		return
 	}
 
-	filters := bson.D{{Key: "name", Value: json.Name}}
-	update := bson.D{
-		{Key: "$set", Value: bson.D{
-			{Key: "name", Value: json.Name},
-			{Key: "permissions", Value: json.Permissions},
-		}},
-		// {Key: "$push", Value: bson.D{
-		// 	{Key: "permissions", Value: json.Permissions},
-		// }},
+	if strings.Contains(json.ID.Hex(), "000000000000000000000000") {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(helpers.RequiredID))
+		c.Abort()
+		return
 	}
 
-	// update2 := bson.M{
-	// 	"$set": bson.M{
-	// 		"name": json.Name,
-	// 	},
-	// 	"$push": bson.M{
-	// 		"permissions": json.Permissions,
-	// 	},
-	// }
+	objID, err := primitive.ObjectIDFromHex(json.ID.Hex())
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(helpers.InvalidID))
+		c.Abort()
+		return
+	}
+
+	filters := bson.M{"_id": objID}
+
+	update := bson.M{
+		"$set": bson.M{
+			"permissions": json.Permissions,
+		},
+	}
 
 	result, err := services.DBConn.UpdateRole(c, filters, update)
 

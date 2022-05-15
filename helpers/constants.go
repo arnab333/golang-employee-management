@@ -91,4 +91,6 @@ var UserPermissions = PermissionsList{
 const (
 	CreatedMessage = "Successfully Inserted!"
 	Unauthorized   = "You are not authorized!"
+	InvalidID      = "Invalid ID!"
+	RequiredID     = "ID is required!"
 )
