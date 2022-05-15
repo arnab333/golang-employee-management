@@ -8,17 +8,18 @@ type ContextValues struct {
 }
 
 type EnviormentVariables struct {
-	MONGO_USERNAME     string
-	MONGO_PASSWORD     string
-	MONGO_DBNAME       string
-	SENDGRID_API_KEY   string
-	JWT_ACCESS_SECRET  string
-	JWT_REFRESH_SECRET string
-	REDIS_DSN          string
-	REDIS_PASSWORD     string
-	APP_ENV            string
-	GOOGLE_API_KEY     string
-	GOOGLE_CALENDAR_ID string
+	MONGO_USERNAME      string
+	MONGO_PASSWORD      string
+	MONGO_DBNAME        string
+	SENDGRID_API_KEY    string
+	JWT_ACCESS_SECRET   string
+	JWT_REFRESH_SECRET  string
+	REDIS_DSN           string
+	REDIS_PASSWORD      string
+	APP_ENV             string
+	GOOGLE_API_KEY      string
+	GOOGLE_CALENDAR_ID  string
+	SENDGRID_FROM_EMAIL string
 }
 
 type RolesList struct {
@@ -46,17 +47,18 @@ var CtxValues = ContextValues{
 }
 
 var EnvKeys = EnviormentVariables{
-	MONGO_USERNAME:     "MONGO_USERNAME",
-	MONGO_PASSWORD:     "MONGO_PASSWORD",
-	MONGO_DBNAME:       "MONGO_DBNAME",
-	SENDGRID_API_KEY:   "SENDGRID_API_KEY",
-	JWT_ACCESS_SECRET:  "JWT_ACCESS_SECRET",
-	JWT_REFRESH_SECRET: "JWT_REFRESH_SECRET",
-	REDIS_DSN:          "REDIS_DSN",
-	REDIS_PASSWORD:     "REDIS_PASSWORD",
-	APP_ENV:            "APP_ENV",
-	GOOGLE_API_KEY:     "GOOGLE_API_KEY",
-	GOOGLE_CALENDAR_ID: "GOOGLE_CALENDAR_ID",
+	MONGO_USERNAME:      "MONGO_USERNAME",
+	MONGO_PASSWORD:      "MONGO_PASSWORD",
+	MONGO_DBNAME:        "MONGO_DBNAME",
+	SENDGRID_API_KEY:    "SENDGRID_API_KEY",
+	JWT_ACCESS_SECRET:   "JWT_ACCESS_SECRET",
+	JWT_REFRESH_SECRET:  "JWT_REFRESH_SECRET",
+	REDIS_DSN:           "REDIS_DSN",
+	REDIS_PASSWORD:      "REDIS_PASSWORD",
+	APP_ENV:             "APP_ENV",
+	GOOGLE_API_KEY:      "GOOGLE_API_KEY",
+	GOOGLE_CALENDAR_ID:  "GOOGLE_CALENDAR_ID",
+	SENDGRID_FROM_EMAIL: "SENDGRID_FROM_EMAIL",
 }
 
 var UserRoles = RolesList{

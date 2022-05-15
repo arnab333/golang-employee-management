@@ -57,8 +57,8 @@ func Register(c *gin.Context) {
 	}
 
 	mailResponse, err := services.SendEmail(&services.EmailDetails{
-		Name:    "Test",
-		Address: "arnabkdebnath@gmail.com",
+		Name:    json.FullName,
+		Address: json.Email,
 	})
 
 	if err != nil {

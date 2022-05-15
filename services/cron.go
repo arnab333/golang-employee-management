@@ -11,8 +11,8 @@ import (
 func CronInit() {
 	c := cron.New()
 
-	// c.AddFunc("0 0 1 */6 *", everySixMonths)
-	c.AddFunc("* * * * *", everySixMonths)
+	c.AddFunc("0 0 1 */6 *", everySixMonths) // This will run every six months
+	// c.AddFunc("* * * * *", everySixMonths) // This will run every one minute
 
 	c.Start()
 

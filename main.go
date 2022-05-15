@@ -26,7 +26,7 @@ func main() {
 
 	closeRedisConn := services.InitRedisConnection()
 
-	services.CronInit()
+	defer services.CronInit()
 
 	defer closeMongoConn()
 

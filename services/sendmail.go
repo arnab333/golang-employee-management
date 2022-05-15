@@ -15,10 +15,10 @@ type EmailDetails struct {
 }
 
 func SendEmail(sendTo *EmailDetails) (*rest.Response, error) {
-	from := mail.NewEmail("Arnab", "arnab3111@gmail.com")
-	subject := "Sending with SendGrid is Fun"
+	from := mail.NewEmail("Employee Management", os.Getenv(helpers.EnvKeys.SENDGRID_FROM_EMAIL))
+	subject := "Account Created"
 	to := mail.NewEmail(sendTo.Name, sendTo.Address)
-	htmlContent := "<strong>and easy to do anywhere, even with Go</strong>"
+	htmlContent := "An account with your email address has been created!"
 	message := mail.NewSingleEmail(from, subject, to, "", htmlContent)
 	client := sendgrid.NewSendClient(os.Getenv(helpers.EnvKeys.SENDGRID_API_KEY))
 	response, err := client.Send(message)
