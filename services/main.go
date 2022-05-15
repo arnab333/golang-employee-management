@@ -68,14 +68,6 @@ func InitMongoConnection() func() {
 			log.Fatal("Connect Error ==>", err)
 		}
 
-		// defer func() {
-		// 	// client.Disconnect method also has deadline.
-		// 	// returns error if any,
-		// 	if err := client.Disconnect(ctx); err != nil {
-		// 		log.Fatal("Disconnect Error ==>", err)
-		// 	}
-		// }()
-
 		DBConn.Database = client.Database(dbname)
 
 		// ## The following part is only for checking if the database connection is successfull or not.

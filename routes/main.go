@@ -23,12 +23,14 @@ func Init() *gin.Engine {
 	v1 := api.Group("/v1")
 
 	auth := v1.Group("/")
-	user := v1.Group("/")
-	role := v1.Group("/", middlewares.VerifyToken)
+	user := v1.Group("/", middlewares.VerifyToken, middlewares.CheckRole)
+	role := v1.Group("/", middlewares.VerifyToken, middlewares.CheckRole)
+	holiday := v1.Group("/", middlewares.VerifyToken, middlewares.CheckRole)
 
 	authRoutes(auth)
 	userRoutes(user)
 	roleRoutes(role)
+	holidayRoutes(holiday)
 
 	return router
 }

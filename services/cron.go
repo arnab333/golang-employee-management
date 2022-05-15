@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,9 +17,17 @@ func CronInit() {
 
 	c.Start()
 
-	select {}
+	for {
+		select {}
+	}
 
-	// c.Stop()
+	// go func() {
+	// 	for {
+	// 		everySixMonths()
+	// 		<-time.After(1 * time.Minute)
+	// 	}
+	// }()
+
 }
 
 func everySixMonths() {
@@ -38,6 +47,8 @@ func everySixMonths() {
 		_, err := DBConn.findHoliday(context.TODO(), filters)
 		if err != nil {
 			// fmt.Println("Error findHoliday ==>", err.Error())
+			val.Summary = strings.ReplaceAll(val.Summary, " (Regional Holiday)", "")
+			val.Summary = strings.ReplaceAll(val.Summary, "West Bengal:", "")
 			_, err = DBConn.insertHoliday(context.TODO(), val)
 			if err != nil {
 				fmt.Println("Error insertHoliday ==>", err.Error())

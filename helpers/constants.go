@@ -37,6 +37,11 @@ type PermissionsList struct {
 	ReadRole   string
 	UpdateRole string
 	DeleteRole string
+
+	CreateHoliday string
+	ReadHoliday   string
+	UpdateHoliday string
+	DeleteHoliday string
 }
 
 var CtxValues = ContextValues{
@@ -76,6 +81,11 @@ var UserPermissions = PermissionsList{
 	ReadRole:   "ReadRole",
 	UpdateRole: "UpdateRole",
 	DeleteRole: "DeleteRole",
+
+	CreateHoliday: "CreateHoliday",
+	ReadHoliday:   "ReadHoliday",
+	UpdateHoliday: "UpdateHoliday",
+	DeleteHoliday: "DeleteHoliday",
 }
 
 const (
