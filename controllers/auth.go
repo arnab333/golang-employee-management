@@ -10,6 +10,7 @@ import (
 	"github.com/arnab333/golang-employee-management/services"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,6 +19,7 @@ func Register(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -27,6 +29,7 @@ func Register(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse("Role Does Not Match!"))
+		c.Abort()
 		return
 	}
 
@@ -38,13 +41,16 @@ func Register(c *gin.Context) {
 
 	if result.Email != "" {
 		c.JSON(http.StatusConflict, helpers.HandleErrorResponse("Email Already Exists!"))
+		c.Abort()
 		return
 	}
 
 	password, err := bcrypt.GenerateFromPassword([]byte(json.Password), 14)
-
 	if err != nil {
-		fmt.Println("FindUser err ==>", err.Error())
+		fmt.Println("GenerateFromPassword err ==>", err.Error())
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
+		return
 	}
 
 	json.Password = string(password)
@@ -53,6 +59,7 @@ func Register(c *gin.Context) {
 	if _, err := services.DBConn.InsertUser(c, json); err != nil {
 		fmt.Println("InsertUser err ==>", err)
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -75,24 +82,27 @@ func Login(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
 	user, err := services.DBConn.FindUser(c, bson.M{"email": json["email"], "isActive": true})
-
 	if err != nil {
 		c.JSON(http.StatusNotFound, helpers.HandleErrorResponse("Invalid Email or Password!!"))
+		c.Abort()
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(json["password"])); err != nil {
 		c.JSON(http.StatusNotFound, helpers.HandleErrorResponse("Invalid Email or Password!"))
+		c.Abort()
 		return
 	}
 
 	td, err := services.CreateAuth(c, user.ID.Hex(), user.Role)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		c.Abort()
 		return
 	}
 
@@ -107,12 +117,14 @@ func Logout(c *gin.Context) {
 	accessUUID := c.GetString(helpers.CtxValues.AccessUUID)
 	if accessUUID == "" {
 		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Unauthorized!"))
+		c.Abort()
 		return
 	}
 
 	deleted, err := services.DeleteAuth(c, accessUUID)
 	if err != nil || deleted == 0 {
 		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Unauthorized!!"))
+		c.Abort()
 		return
 	}
 	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("Successfully logged out", nil))
@@ -123,6 +135,7 @@ func RefreshToken(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -142,12 +155,14 @@ func RefreshToken(c *gin.Context) {
 	deleted, err := services.DeleteAuth(c, claims.ID)
 	if err != nil || deleted == 0 {
 		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Unauthorized!!"))
+		c.Abort()
 		return
 	}
 
 	td, err := services.CreateAuth(c, claims.UserID, claims.Role)
 	if err != nil {
 		c.JSON(http.StatusForbidden, err.Error())
+		c.Abort()
 		return
 	}
 
@@ -156,4 +171,69 @@ func RefreshToken(c *gin.Context) {
 		"refreshToken": td.RefreshToken,
 	}
 	c.JSON(http.StatusCreated, helpers.HandleSuccessResponse("", tokens))
+}
+
+func ChangePassword(c *gin.Context) {
+	var json map[string]string
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
+		return
+	}
+
+	currentPass := json["currentPassword"]
+	newPass := json["newPassword"]
+
+	if currentPass == "" || newPass == "" {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse("`currentPassword` & `newPassword` are required!"))
+		c.Abort()
+		return
+	}
+
+	userID := c.GetString(helpers.CtxValues.UserID)
+	objID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(helpers.InvalidID))
+		c.Abort()
+		return
+	}
+
+	user, err := services.DBConn.FindUser(c, bson.M{"_id": objID, "isActive": true})
+	if err != nil {
+		c.JSON(http.StatusNotFound, helpers.HandleErrorResponse("Invalid Token!"))
+		c.Abort()
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(currentPass)); err != nil {
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse("Invalid Password!"))
+		c.Abort()
+		return
+	}
+
+	password, err := bcrypt.GenerateFromPassword([]byte(newPass), 14)
+	if err != nil {
+		fmt.Println("GenerateFromPassword err ==>", err.Error())
+		c.JSON(http.StatusUnauthorized, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
+		return
+	}
+
+	filters := bson.M{"_id": user.ID}
+
+	update := bson.M{
+		"$set": bson.M{
+			"password": string(password),
+		},
+	}
+
+	_, err = services.DBConn.UpdateUser(c, filters, update)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("Password Updated!", nil))
 }

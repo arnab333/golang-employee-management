@@ -22,6 +22,7 @@ func GetHolidays(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -57,6 +58,7 @@ func GetHoliday(c *gin.Context) {
 	result, err := services.DBConn.FindHoliday(c, filters)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 

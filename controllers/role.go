@@ -23,6 +23,7 @@ func GetUserRoles(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -56,6 +57,7 @@ func GetUserRole(c *gin.Context) {
 	result, err := services.DBConn.FindRole(c, filters)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -73,6 +75,7 @@ func CreateUserRole(c *gin.Context) {
 	var json services.UserRole
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -93,10 +96,11 @@ func CreateUserRole(c *gin.Context) {
 	if _, err := services.DBConn.InsertRole(c, json); err != nil {
 		fmt.Println("InsertRole err", err.Error())
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", "Role Inserted!"))
+	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("Role Inserted!", nil))
 }
 
 func UpdateUserRole(c *gin.Context) {
@@ -117,6 +121,7 @@ func UpdateUserRole(c *gin.Context) {
 	var json services.UserRole
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
@@ -139,8 +144,9 @@ func UpdateUserRole(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", "Role Updated!"))
+	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("Role Updated!", nil))
 }

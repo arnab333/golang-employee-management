@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type User struct {
@@ -34,4 +35,16 @@ func (conn *MongoDBConnection) FindUser(c *gin.Context, filters interface{}) (Us
 	err := collection.FindOne(c, filters).Decode(&data)
 
 	return data, err
+}
+
+func (conn *MongoDBConnection) UpdateUser(c *gin.Context, filters interface{}, data interface{}) (*mongo.UpdateResult, error) {
+	collection := conn.Database.Collection(collectionNames.users)
+
+	opts := options.Update()
+
+	if filters == nil {
+		filters = bson.M{}
+	}
+
+	return collection.UpdateOne(c, filters, data, opts)
 }
