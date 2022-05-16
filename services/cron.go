@@ -12,6 +12,7 @@ import (
 func CronInit() {
 	c := cron.New()
 
+	// ## running this cron to fetch local holidays from Google Calendar and store it in our database
 	c.AddFunc("0 0 1 */6 *", everySixMonths) // This will run every six months
 	// c.AddFunc("* * * * *", everySixMonths) // This will run every one minute
 
@@ -20,13 +21,6 @@ func CronInit() {
 	for {
 		select {}
 	}
-
-	// go func() {
-	// 	for {
-	// 		everySixMonths()
-	// 		<-time.After(1 * time.Minute)
-	// 	}
-	// }()
 
 }
 

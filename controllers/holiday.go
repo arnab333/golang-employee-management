@@ -64,3 +64,7 @@ func GetHoliday(c *gin.Context) {
 
 	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", result))
 }
+
+func CreateHoliday(c *gin.Context) {
+
+}

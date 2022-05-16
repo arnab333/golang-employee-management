@@ -10,4 +10,6 @@ func holidayRoutes(rg *gin.RouterGroup) {
 
 	rg.GET("/holiday/:id", controllers.GetHoliday)
 
+	rg.POST("/holiday", controllers.CreateHoliday)
+
 }

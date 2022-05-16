@@ -43,6 +43,11 @@ type redisConnection struct {
 
 var redisConn redisConnection
 
+type mongoPaginate struct {
+	limit  int64
+	pageNo int64
+}
+
 func InitMongoConnection() func() {
 	var client *mongo.Client
 	var cancel context.CancelFunc
@@ -123,4 +128,19 @@ func closeRedisConnection(client *redis.Client) {
 			log.Fatal("Close Error ==>", err)
 		}
 	}()
+}
+
+func newMongoPaginate(limit, pageNo int64) *mongoPaginate {
+	return &mongoPaginate{
+		limit:  limit,
+		pageNo: pageNo,
+	}
+}
+
+func (mp *mongoPaginate) getPaginatedOpts() *options.FindOptions {
+	limit := mp.limit
+	skip := (mp.pageNo * mp.limit) - mp.limit
+	opts := options.FindOptions{Limit: &limit, Skip: &skip}
+
+	return &opts
 }
