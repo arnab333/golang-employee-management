@@ -11,9 +11,10 @@ import (
 )
 
 type Holiday struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Summary string             `bson:"summary" json:"summary" binding:"required"`
-	Date    string             `bson:"date" json:"date" binding:"required"`
+	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Summary  string             `bson:"summary" json:"summary" binding:"required"`
+	Date     string             `bson:"date" json:"date" binding:"required"`
+	IsActive bool               `bson:"isActive" json:"isActive"`
 }
 
 func (conn *MongoDBConnection) FindHoliday(ctx context.Context, filters interface{}) (Holiday, error) {

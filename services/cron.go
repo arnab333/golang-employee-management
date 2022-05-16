@@ -50,6 +50,7 @@ func everySixMonths() {
 			val.Summary = strings.ReplaceAll(val.Summary, "(Regional Holiday)", "")
 			val.Summary = strings.ReplaceAll(val.Summary, "West Bengal:", "")
 			val.Summary = strings.TrimSpace(val.Summary)
+			val.IsActive = true
 			_, err = DBConn.InsertHoliday(context.TODO(), val)
 			if err != nil {
 				fmt.Println("Error insertHoliday ==>", err.Error())

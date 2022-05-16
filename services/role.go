@@ -51,10 +51,18 @@ func (conn *MongoDBConnection) FindRoles(c *gin.Context, filters interface{}) ([
 	return data, err
 }
 
+func (conn *MongoDBConnection) InsertRole(ctx *gin.Context, data interface{}) (*mongo.InsertOneResult, error) {
+	collection := conn.Database.Collection(collectionNames.roles)
+
+	opts := options.InsertOne()
+
+	return collection.InsertOne(ctx, data, opts)
+}
+
 func (conn *MongoDBConnection) UpdateRole(c *gin.Context, filters interface{}, data interface{}) (*mongo.UpdateResult, error) {
 	collection := conn.Database.Collection(collectionNames.roles)
 
-	opts := options.Update().SetUpsert(true)
+	opts := options.Update()
 
 	if filters == nil {
 		filters = bson.M{}

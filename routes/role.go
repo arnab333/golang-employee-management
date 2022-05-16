@@ -8,5 +8,9 @@ import (
 func roleRoutes(rg *gin.RouterGroup) {
 	rg.GET("/roles", controllers.GetUserRoles)
 
-	rg.PUT("/role", controllers.UpdateUserRole)
+	rg.PUT("/role/:id", controllers.UpdateUserRole)
+
+	rg.GET("/role/:id", controllers.GetUserRole)
+
+	rg.POST("/role", controllers.CreateUserRole)
 }

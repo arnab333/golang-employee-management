@@ -93,4 +93,5 @@ const (
 	Unauthorized   = "You are not authorized!"
 	InvalidID      = "Invalid ID!"
 	RequiredID     = "ID is required!"
+	RequiredField  = "Field is required!"
 )

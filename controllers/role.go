@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/arnab333/golang-employee-management/helpers"
 	"github.com/arnab333/golang-employee-management/services"
@@ -29,20 +29,98 @@ func GetUserRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", result))
 }
 
-func UpdateUserRole(c *gin.Context) {
+func GetUserRole(c *gin.Context) {
+	permissions := c.GetStringSlice(helpers.CtxValues.Permissions)
+	if !helpers.SliceStringContains(permissions, helpers.UserPermissions.ReadRole) {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(helpers.Unauthorized))
+		c.Abort()
+		return
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(helpers.RequiredID))
+		c.Abort()
+		return
+	}
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(helpers.InvalidID))
+		c.Abort()
+		return
+	}
+
+	filters := bson.M{"_id": objID}
+
+	result, err := services.DBConn.FindRole(c, filters)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", result))
+}
+
+func CreateUserRole(c *gin.Context) {
+	permissions := c.GetStringSlice(helpers.CtxValues.Permissions)
+	if !helpers.SliceStringContains(permissions, helpers.UserPermissions.CreateRole) {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(helpers.Unauthorized))
+		c.Abort()
+		return
+	}
+
 	var json services.UserRole
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
 		return
 	}
 
-	if strings.Contains(json.ID.Hex(), "000000000000000000000000") {
+	if json.Name == "" {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse("`name` is required"))
+		c.Abort()
+		return
+	}
+
+	filters := bson.M{"name": json.Name}
+	result, _ := services.DBConn.FindRole(c, filters)
+	if result.Name != "" {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse("Role already exists!"))
+		c.Abort()
+		return
+	}
+
+	if _, err := services.DBConn.InsertRole(c, json); err != nil {
+		fmt.Println("InsertRole err", err.Error())
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", "Role Inserted!"))
+}
+
+func UpdateUserRole(c *gin.Context) {
+	permissions := c.GetStringSlice(helpers.CtxValues.Permissions)
+	if !helpers.SliceStringContains(permissions, helpers.UserPermissions.UpdateRole) {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(helpers.Unauthorized))
+		c.Abort()
+		return
+	}
+
+	id := c.Param("id")
+	if id == "" {
 		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(helpers.RequiredID))
 		c.Abort()
 		return
 	}
 
-	objID, err := primitive.ObjectIDFromHex(json.ID.Hex())
+	var json services.UserRole
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
+		return
+	}
+
+	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, helpers.HandleErrorResponse(helpers.InvalidID))
 		c.Abort()
@@ -57,17 +135,12 @@ func UpdateUserRole(c *gin.Context) {
 		},
 	}
 
-	result, err := services.DBConn.UpdateRole(c, filters, update)
+	_, err = services.DBConn.UpdateRole(c, filters, update)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, helpers.HandleErrorResponse(err.Error()))
 		return
 	}
 
-	msg := "Role Updated!"
-	if result.UpsertedID != nil {
-		msg = "Role Inserted!"
-	}
-
-	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", msg))
+	c.JSON(http.StatusOK, helpers.HandleSuccessResponse("", "Role Updated!"))
 }
