@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -39,7 +40,9 @@ func (conn *MongoDBConnection) InsertHoliday(ctx context.Context, data interface
 	return collection.InsertOne(ctx, data, opts)
 }
 
-func (conn *MongoDBConnection) FindHolidays(c *gin.Context, filters interface{}) ([]Holiday, error) {
+func (conn *MongoDBConnection) FindHolidays(c *gin.Context, filters interface{}, limit, pageNo int64) ([]Holiday, error) {
+	var opts *options.FindOptions
+
 	collection := conn.Database.Collection(collectionNames.holidays)
 
 	var data []Holiday
@@ -48,16 +51,33 @@ func (conn *MongoDBConnection) FindHolidays(c *gin.Context, filters interface{})
 		filters = bson.M{}
 	}
 
-	cur, err := collection.Find(c, filters)
+	if limit != 0 && pageNo != 0 {
+		opts = newMongoPaginate(limit, pageNo).getPaginatedOpts()
+	}
+
+	cur, err := collection.Find(c, filters, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	err = cur.All(c, &data)
+	if opts == nil {
+		err = cur.All(c, &data)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		return data, nil
 	}
 
-	return data, err
+	for cur.Next(c) {
+		var el Holiday
+		if err := cur.Decode(&el); err != nil {
+			log.Println(err)
+		}
+
+		data = append(data, el)
+	}
+
+	return data, nil
 }

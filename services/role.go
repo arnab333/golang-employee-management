@@ -1,6 +1,8 @@
 package services
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,7 +30,9 @@ func (conn *MongoDBConnection) FindRole(c *gin.Context, filters interface{}) (Us
 	return data, err
 }
 
-func (conn *MongoDBConnection) FindRoles(c *gin.Context, filters interface{}) ([]UserRole, error) {
+func (conn *MongoDBConnection) FindRoles(c *gin.Context, filters interface{}, limit, pageNo int64) ([]UserRole, error) {
+	var opts *options.FindOptions
+
 	collection := conn.Database.Collection(collectionNames.roles)
 
 	var data []UserRole
@@ -37,18 +41,35 @@ func (conn *MongoDBConnection) FindRoles(c *gin.Context, filters interface{}) ([
 		filters = bson.M{}
 	}
 
-	cur, err := collection.Find(c, filters)
+	if limit != 0 && pageNo != 0 {
+		opts = newMongoPaginate(limit, pageNo).getPaginatedOpts()
+	}
+
+	cur, err := collection.Find(c, filters, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	err = cur.All(c, &data)
+	if opts == nil {
+		err = cur.All(c, &data)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		return data, nil
 	}
 
-	return data, err
+	for cur.Next(c) {
+		var el UserRole
+		if err := cur.Decode(&el); err != nil {
+			log.Println(err)
+		}
+
+		data = append(data, el)
+	}
+
+	return data, nil
 }
 
 func (conn *MongoDBConnection) InsertRole(ctx *gin.Context, data interface{}) (*mongo.InsertOneResult, error) {

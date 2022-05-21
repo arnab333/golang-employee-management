@@ -8,7 +8,7 @@ import (
 func userRoutes(rg *gin.RouterGroup) {
 	rg.GET("/users", controllers.GetUsers)
 
-	rg.GET("/user/:id", func(c *gin.Context) {})
+	rg.GET("/user/:id", controllers.GetUser)
 
 	rg.POST("/user", func(c *gin.Context) {})
 
